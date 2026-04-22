@@ -2,18 +2,21 @@ import { supabase } from './supabaseClient';
 
 export default function ProfileSettings() {
   const handleDeleteAccount = async () => {
-    const confirmDelete = window.confirm("Are you sure? This will permanently delete your data per GDPR requirements.");
-    
-    if (confirmDelete) {
-      const { data: { user } } = await supabase.auth.getUser();
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete your account? This action cannot be undone and will erase all your RSVPs/Events."
+    );
+    if (!confirmDelete) return;
 
-      // 1. Delete from the 'profiles' table
-      await supabase.from('profiles').delete().eq('id', user.id);
+    // Call the secure SQL function we just made
+    const { error } = await supabase.rpc('delete_user');
 
-      // 2. Sign out (Note: Only an Admin can delete the actual Auth account in the free tier, 
-      // but deleting the profile data satisfies the "Right to be Forgotten" for this project).
+    if (error) {
+      console.error('Error deleting account:', error);
+      setError(error.message);
+    } else {
+      // Log them out and send to home page
       await supabase.auth.signOut();
-      window.location.href = '/'; 
+      navigate('/');
     }
   };
 
