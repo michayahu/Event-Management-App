@@ -1,7 +1,7 @@
 import { useEffect, useState, memo } from "react";
 
 import { AuthContext } from "../hooks/useAuth";
-import supabase from "../utils/supabase";
+import { supabase } from "../supabaseClient";
 
 const AuthProvider = memo((props) => {
   const [user, setUser] = useState(null);
