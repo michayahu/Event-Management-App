@@ -145,13 +145,14 @@ function formatPrice(event) {
 
 // ── EVENT CARD ───────────────────────────────────────────────────────────────
 
-function EventCard({ event, onAction }) {
+function EventCard({ event, onAction, onRSVP, rsvpState }) {
   const [imgFailed, setImgFailed] = useState(false)
   const badge  = getStatusBadge(event)
   const bg     = CAT_GRADIENT[event.category] || CAT_GRADIENT.default
   const meta   = CAT_META[event.category]     || CAT_META.All
   const isPaid = event.price > 0
   const showImg = event.image_url && !imgFailed
+  const thisRsvp = rsvpState?.[event.id]
 
   return (
     <article
@@ -214,9 +215,19 @@ function EventCard({ event, onAction }) {
           <span style={{ fontWeight: 'bold', fontSize: '0.95rem', color: isPaid ? '#fff' : '#00cc66' }}>
             {formatPrice(event)}
           </span>
-          <span style={{ border: `1px solid ${meta.accent}`, color: meta.accent, padding: '5px 14px', fontSize: '10px', letterSpacing: '0.1em', fontWeight: 'bold' }}>
-            VIEW →
-          </span>
+          <button
+            onClick={e => { e.stopPropagation(); onRSVP(event) }}
+            disabled={thisRsvp === 'loading' || thisRsvp === 'done'}
+            style={{
+              border: thisRsvp === 'done' ? '1px solid #00cc66' : `1px solid ${meta.accent}`,
+              color: thisRsvp === 'done' ? '#00cc66' : meta.accent,
+              background: 'none', padding: '5px 14px', fontSize: '10px',
+              letterSpacing: '0.1em', fontWeight: 'bold', cursor: thisRsvp === 'done' ? 'default' : 'pointer',
+              fontFamily: 'inherit',
+            }}
+          >
+            {thisRsvp === 'loading' ? 'BOOKING...' : thisRsvp === 'done' ? '✓ BOOKED' : thisRsvp === 'error' ? 'TRY AGAIN' : 'GET TICKET →'}
+          </button>
         </div>
       </div>
     </article>
@@ -287,6 +298,7 @@ export default function Homepage() {
   const [search,         setSearch]         = useState('')
   const [loading,        setLoading]        = useState(true)
   const [isLoggedIn,     setIsLoggedIn]     = useState(false)
+  const [rsvpState,      setRsvpState]      = useState({})
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -328,6 +340,25 @@ export default function Homepage() {
   // Redirect guests to login if not authenticated; hosts go to dashboard
   function handleTicketAction() {
     navigate(isLoggedIn ? '/tickets' : '/login')
+  }
+
+  async function handleRSVP(event) {
+    if (!isLoggedIn) { navigate('/login'); return }
+    setRsvpState(prev => ({ ...prev, [event.id]: 'loading' }))
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      const { data: newRsvp, error } = await supabase
+        .from('rsvps')
+        .insert([{ event_id: event.id, guest_id: user.id, status: 'accepted' }])
+        .select().single()
+      if (error) throw error
+      setRsvpState(prev => ({ ...prev, [event.id]: 'done' }))
+      // notify Member 3's email system
+      const { notifyTicketCreated } = await import('../api/sendTicket')
+      await notifyTicketCreated({ rsvpId: newRsvp.id, guestEmail: user.email, eventTitle: event.title, eventDate: event.date })
+    } catch {
+      setRsvpState(prev => ({ ...prev, [event.id]: 'error' }))
+    }
   }
 
   function handleHostAction() {
@@ -609,7 +640,7 @@ export default function Homepage() {
             <div className="events-grid" role="list">
               {filtered.map(event => (
                 <div key={event.id} role="listitem">
-                  <EventCard event={event} onAction={handleTicketAction} />
+                  <EventCard event={event} onAction={handleTicketAction} onRSVP={handleRSVP} rsvpState={rsvpState} />
                 </div>
               ))}
             </div>
