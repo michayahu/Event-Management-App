@@ -138,38 +138,20 @@ export default function MyTickets() {
       const { data: { session } } = await supabase.auth.getSession()
       if (session) {
         setIsLoggedIn(true)
-        const { data, error } = await supabase
-          .from('rsvps')
-          .select('id, status, event:events(id, title, event_date, max_capacity)')
-          .eq('guest_id', session.user.id)
-          .neq('status', 'Declined')
-          .order('created_at', { ascending: false })
-        if (!error && data && data.length > 0) {
-          const normalized = data.map(r => ({
-            id: r.id,
-            ticket_code: r.id,          // RSVP UUID is the QR value
-            status: r.status,
-            event: {
-              title: r.event?.title ?? 'Unknown Event',
-              date: r.event?.event_date
-                ? new Date(r.event.event_date + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
-                : 'TBD',
-              time: r.event?.time ?? '',
-              venue: r.event?.venue ?? 'TBD',
-              price: r.event?.price ?? 0,
-              image_url: r.event?.image_url ?? null,
-            },
-          }))
-          setTickets(normalized)
+        // Load tickets from localStorage for this user
+        const key = `tickets_${session.user.id}`
+        const stored = JSON.parse(localStorage.getItem(key) || '[]')
+        if (stored.length > 0) {
+          setTickets(stored)
           setLoading(false)
           return
         }
+        setTickets([])
+        setLoading(false)
+        return
       }
-    } catch {
-      // fall through to mock data only if not logged in
-    }
-    const { data: { session } } = await supabase.auth.getSession().catch(() => ({ data: { session: null } }))
-    if (!session) setTickets(MOCK_TICKETS)
+    } catch { }
+    setTickets(MOCK_TICKETS)
     setLoading(false)
   }
 

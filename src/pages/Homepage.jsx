@@ -349,40 +349,43 @@ export default function Homepage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { navigate('/login'); return }
 
-      // Check if already RSVP'd
-      const { data: existing } = await supabase
-        .from('rsvps')
-        .select('id')
-        .eq('event_id', event.id)
-        .eq('guest_id', user.id)
-        .single()
+      const key = `tickets_${user.id}`
+      const existing = JSON.parse(localStorage.getItem(key) || '[]')
 
-      if (existing) {
+      // Already booked
+      if (existing.find(t => t.event_id === event.id)) {
         setRsvpState(prev => ({ ...prev, [event.id]: 'done' }))
-        navigate('/tickets')
+        setTimeout(() => navigate('/tickets'), 500)
         return
       }
 
-      const { data: newRsvp, error } = await supabase
-        .from('rsvps')
-        .insert([{ event_id: event.id, guest_id: user.id, status: 'Attending' }])
-        .select()
-        .single()
+      // Generate ticket reference
+      const ticketCode = 'EVT-' + Math.random().toString(36).substr(2, 6).toUpperCase()
 
-      if (error) {
-        console.error('RSVP error:', error.message)
-        throw error
+      const newTicket = {
+        id: ticketCode,
+        ticket_code: ticketCode,
+        event_id: event.id,
+        status: 'Attending',
+        event: {
+          title: event.title,
+          date: event.date,
+          time: event.time || '',
+          venue: event.venue || 'London',
+          price: event.price || 0,
+          image_url: event.image_url || null,
+        },
       }
 
+      localStorage.setItem(key, JSON.stringify([newTicket, ...existing]))
       setRsvpState(prev => ({ ...prev, [event.id]: 'done' }))
 
-      // Notify Member 3's email system (non-fatal)
+      // Try email (non-fatal)
       try {
         const { notifyTicketCreated } = await import('../api/sendTicket')
-        await notifyTicketCreated({ rsvpId: newRsvp.id, guestEmail: user.email, eventTitle: event.title, eventDate: event.date })
-      } catch { /* email failure doesn't block ticket */ }
+        await notifyTicketCreated({ rsvpId: ticketCode, guestEmail: user.email, eventTitle: event.title, eventDate: event.date })
+      } catch { }
 
-      // Go to tickets page after short delay
       setTimeout(() => navigate('/tickets'), 800)
 
     } catch (err) {
