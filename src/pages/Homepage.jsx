@@ -318,7 +318,7 @@ export default function Homepage() {
   async function fetchEvents() {
     setLoading(true)
     try {
-      const { data, error } = await supabase.from('events').select('*').order('created_at', { ascending: false })
+      const { data, error } = await supabase.from('events').select('*').order('event_date', { ascending: true })
       setEvents(!error && data?.length ? data : MOCK_EVENTS)
     } catch {
       setEvents(MOCK_EVENTS)
