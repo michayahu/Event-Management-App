@@ -135,17 +135,57 @@ export default function MyTickets() {
   async function fetchTickets() {
     setLoading(true)
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (session) {
+      const { data: { user } } = await supabase.auth.getUser()
+
+      if (user) {
         setIsLoggedIn(true)
-        const key = `tickets_${session.user.id}`
+
+        // Try real Supabase RSVPs first (Member 2's query)
+        const { data, error } = await supabase
+          .from('rsvps')
+          .select(`
+            id,
+            status,
+            event:events (
+              title,
+              event_date,
+              max_capacity
+            )
+          `)
+          .eq('guest_id', user.id)
+
+        if (!error && data && data.length > 0) {
+          const formatted = data.map(rsvp => ({
+            id: rsvp.id,
+            ticket_code: rsvp.id,
+            status: rsvp.status,
+            event: {
+              title: rsvp.event?.title ?? 'Unknown Event',
+              date: rsvp.event?.event_date
+                ? new Date(rsvp.event.event_date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
+                : 'TBD',
+              time: 'TBD',
+              venue: 'Main Venue',
+              price: 0,
+              image_url: null,
+            },
+          }))
+          setTickets(formatted)
+          setLoading(false)
+          return
+        }
+
+        // Fallback: localStorage tickets (from GET TICKET button)
+        const key = `tickets_${user.id}`
         const stored = JSON.parse(localStorage.getItem(key) || '[]')
         setTickets(stored)
         setLoading(false)
         return
       }
-    } catch { }
-    // Not logged in — show mock tickets as demo
+    } catch (err) {
+      console.error(err)
+    }
+    // Not logged in — show mock demo tickets
     setTickets(MOCK_TICKETS)
     setLoading(false)
   }
