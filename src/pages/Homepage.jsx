@@ -383,7 +383,7 @@ export default function Homepage() {
       // Send ticket confirmation email with QR code via Resend
       try {
         const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${ticketCode}`
-        await fetch('https://api.resend.com/emails', {
+        const emailRes = await fetch('https://api.resend.com/emails', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -416,7 +416,11 @@ export default function Homepage() {
             `,
           }),
         })
-      } catch { /* email failure is non-fatal */ }
+        const result = await emailRes.json()
+        console.log('Resend response:', emailRes.status, result)
+      } catch (emailErr) {
+        console.error('Email error:', emailErr)
+      }
 
       // Redirect to tickets page
       window.location.href = '/tickets'
