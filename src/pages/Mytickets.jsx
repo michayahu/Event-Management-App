@@ -36,7 +36,7 @@ const MOCK_TICKETS = [
 function TicketCard({ ticket }) {
   const { event, ticket_code, status } = ticket
   const isPaid = event.price > 0
-  const isAttended = status === 'attended'
+  const isAttended = status === 'Attended'
 
   return (
     <article style={cardStyle} aria-label={`Ticket for ${event.title}`}>
@@ -142,7 +142,7 @@ export default function MyTickets() {
           .from('rsvps')
           .select('id, status, event:events(id, title, event_date, max_capacity)')
           .eq('guest_id', session.user.id)
-          .neq('status', 'declined')
+          .neq('status', 'Declined')
           .order('created_at', { ascending: false })
         if (!error && data && data.length > 0) {
           const normalized = data.map(r => ({

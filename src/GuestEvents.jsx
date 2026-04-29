@@ -30,7 +30,7 @@ export default function GuestEvents() {
     // MISSING .select().single() requirement for the email API!
     const { data: newRsvp, error } = await supabase
       .from('rsvps')
-      .insert([{ event_id: event.id, guest_id: user.id, status: 'accepted' }])
+      .insert([{ event_id: event.id, guest_id: user.id, status: 'Attending' }])
       .select() 
       .single(); 
 
