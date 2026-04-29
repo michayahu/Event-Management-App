@@ -162,12 +162,9 @@ export default function MyTickets() {
       {/* Navbar */}
       <header>
         <nav aria-label="Main navigation" style={navStyle}>
-          <button style={navBtn} onClick={() => navigate('/')} aria-label="Discover events">
-            DISCOVER EVENTS
-          </button>
-          <button style={navBtn} onClick={() => navigate('/')} aria-label="Go to home page">
-            HOME
-          </button>
+          <button style={navBtn} onClick={() => navigate('/')}>HOME</button>
+          <button style={navBtn} onClick={() => navigate('/dashboard')}>DASHBOARD</button>
+          <button style={navBtn} onClick={() => navigate('/contact')}>HELP</button>
         </nav>
         <hr style={{ borderColor: '#222' }} />
       </header>

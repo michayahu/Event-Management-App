@@ -408,15 +408,16 @@ export default function Homepage() {
           <a href="/" aria-label="EventHub home" style={{ fontWeight: 'bold', fontSize: '1.15rem', letterSpacing: '0.18em' }}>
             EVENT<span style={{ color: '#4361ee' }}>●</span>HUB
           </a>
-          <div style={{ display: 'flex', gap: '10px' }}>
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+            <button style={outlineBtn} onClick={() => navigate('/contact')}>HELP</button>
             {isLoggedIn ? (
               <>
-                <button style={solidBtn} onClick={() => navigate('/dashboard')}>DASHBOARD</button>
-                <button style={solidBtn} onClick={() => navigate('/tickets')}>MY TICKETS</button>
+                <button style={outlineBtn} onClick={() => navigate('/dashboard')}>DASHBOARD</button>
+                <button style={outlineBtn} onClick={() => navigate('/tickets')}>MY TICKETS</button>
               </>
             ) : (
               <>
-                <a href="/login"><button style={outlineBtn}>LOG IN</button></a>
+                <button style={outlineBtn} onClick={() => navigate('/login')}>LOG IN</button>
                 <button style={solidBtn} onClick={() => navigate('/login')}>CREATE ACCOUNT</button>
               </>
             )}
