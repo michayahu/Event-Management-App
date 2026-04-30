@@ -16,7 +16,7 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         from: 'onboarding@resend.dev',
-        to: 'uktaha740@gmail.com',
+        to: '16jamesm@gmail.com',
         subject: `Ticket for ${eventTitle} — booked by ${guestEmail}`,
         html: `
           <div style="background:#000;color:#fff;font-family:'Courier New',monospace;padding:40px;max-width:600px;margin:0 auto;">
