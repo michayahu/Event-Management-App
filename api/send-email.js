@@ -12,7 +12,7 @@ export default async function handler(req, res) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer re_L3vMjxGs_H4gjsDgxFSDL71Ttk8v5vzT7',
+        'Authorization': 'Bearer re_YDWbv2az_HSqKMFyHygrMocxhZ1R3h7Ec',
       },
       body: JSON.stringify({
         from: 'onboarding@resend.dev',
